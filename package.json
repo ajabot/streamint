@@ -1,0 +1,41 @@
+{
+  "name": "streamint",
+  "version": "0.1.0",
+  "description": "A modern web radio streaming desktop application",
+  "main": "./out/main/index.js",
+  "author": "Aurelien Jabot",
+  "license": "GPL-3.0-only",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "start": "electron-vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ajabot/streamint.git"
+  },
+  "keywords": [
+    "electron",
+    "radio",
+    "streaming",
+    "webradio"
+  ],
+  "bugs": {
+    "url": "https://github.com/ajabot/streamint/issues"
+  },
+  "homepage": "https://github.com/ajabot/streamint#readme",
+  "devDependencies": {
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@vitejs/plugin-react": "^5.1.0",
+    "electron": "^39.0.0",
+    "electron-vite": "^4.0.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.12"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  }
+}
