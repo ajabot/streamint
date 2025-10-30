@@ -16,3 +16,27 @@ body {
   height: 100vh;
   overflow: hidden;
 }
+
+/* Custom slider styling */
+input[type='range'].slider {
+  accent-color: #2563eb; /* blue-600 */
+}
+
+input[type='range'].slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #2563eb;
+  cursor: pointer;
+}
+
+input[type='range'].slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #2563eb;
+  cursor: pointer;
+  border: none;
+}
