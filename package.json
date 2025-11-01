@@ -1,30 +1,48 @@
 {
   "name": "streamint",
-  "version": "0.0.1",
-  "description": "A webradio streaming software",
-  "main": "main.js",
+  "version": "0.1.0",
+  "description": "A modern web radio streaming desktop application",
+  "main": "./out/main/index.js",
+  "author": "Aurelien Jabot",
+  "license": "GPL-3.0-only",
   "scripts": {
-    "start": "electron .",
-    "inspect": "electron --inspect ."
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "start": "electron-vite preview"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ajabot/streamint.git"
   },
   "keywords": [
+    "electron",
+    "radio",
     "streaming",
-    "radio"
+    "webradio"
   ],
-  "author": "Aurelien Jabot",
-  "license": "GPL-3.0-only",
   "bugs": {
     "url": "https://github.com/ajabot/streamint/issues"
   },
   "homepage": "https://github.com/ajabot/streamint#readme",
   "devDependencies": {
-    "electron": "^5.0.6"
+    "@tailwindcss/postcss": "^4.1.16",
+    "@types/howler": "^2.2.12",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@vitejs/plugin-react": "^5.1.0",
+    "autoprefixer": "^10.4.21",
+    "electron": "^39.0.0",
+    "electron-vite": "^4.0.1",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.16",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.12"
   },
   "dependencies": {
-    "howler": "^2.1.2"
+    "@electron-toolkit/utils": "^4.0.0",
+    "howler": "^2.2.4",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   }
 }

@@ -1,0 +1,33 @@
+{
+  "version": "1.0",
+  "stations": [
+    {
+      "id": "jazz24",
+      "name": "Jazz24",
+      "url": "https://live.wostreaming.net/direct/ppm-jazz24aac-ibc1",
+      "favorite": true
+    },
+    {
+      "id": "soma-drone",
+      "name": "SomaFM Drone Zone",
+      "url": "https://ice1.somafm.com/dronezone-128-aac",
+      "favorite": false
+    },
+    {
+      "id": "nts1",
+      "name": "NTS Radio 1",
+      "url": "https://stream-relay-geo.ntslive.net/stream",
+      "favorite": true
+    },
+    {
+      "id": "kexp",
+      "name": "KEXP 90.3 FM Seattle",
+      "url": "https://kexp-mp3-128.streamguys1.com/kexp128.mp3",
+      "favorite": false
+    }
+  ],
+  "settings": {
+    "volume": 0.5,
+    "lastStation": null
+  }
+}
