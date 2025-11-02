@@ -3,7 +3,7 @@ import { Howl } from 'howler'
 import { RadioStation, Config } from './types'
 import StationList from './components/StationList'
 import PlayerControls from './components/PlayerControls'
-import VolumeControl from './components/VolumeControl'
+import Header from './components/Header'
 
 function App() {
   const [config, setConfig] = useState<Config | null>(null)
@@ -11,7 +11,19 @@ function App() {
   const [currentStation, setCurrentStation] = useState<RadioStation | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [volume, setVolume] = useState(0.5)
+  const [activeTab, setActiveTab] = useState<'all' | 'favorites' | 'recent'>('all')
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const soundRef = useRef<Howl | null>(null)
+
+  // Emoji mapping based on station ID hash
+  const getStationEmoji = (station: RadioStation): string => {
+    const emojis = ['📻', '🎵', '🎸', '🎹', '🎤', '🎧', '🎺', '🎷', '🥁', '🎻', '🌍', '⭐']
+    let hash = 0
+    for (let i = 0; i < station.id.length; i++) {
+      hash = station.id.charCodeAt(i) + ((hash << 5) - hash)
+    }
+    return emojis[Math.abs(hash) % emojis.length]
+  }
 
   useEffect(() => {
     loadConfig()
@@ -74,15 +86,16 @@ function App() {
     setCurrentStation(station)
     setIsPlaying(false)
     saveConfig({ lastStation: station.id })
+
+    // Automatically start playing the new station
+    playStation(station)
   }
 
-  const handlePlay = () => {
-    if (!currentStation) return
-
+  const playStation = (station: RadioStation) => {
     try {
       // Create new Howl instance for the stream
       soundRef.current = new Howl({
-        src: [currentStation.url],
+        src: [station.url],
         html5: true, // Enable streaming mode
         format: ['mp3', 'aac'],
         volume: volume,
@@ -90,7 +103,7 @@ function App() {
           console.error('Stream load error:', error)
           window.electronAPI.dialog.showError(
             'Playback Error',
-            `Failed to load stream: ${currentStation.name}`
+            `Failed to load stream: ${station.name}`
           )
           setIsPlaying(false)
         },
@@ -98,7 +111,7 @@ function App() {
           console.error('Stream play error:', error)
           window.electronAPI.dialog.showError(
             'Playback Error',
-            `Failed to play stream: ${currentStation.name}`
+            `Failed to play stream: ${station.name}`
           )
           setIsPlaying(false)
         }
@@ -110,6 +123,11 @@ function App() {
       console.error('Failed to start playback:', error)
       window.electronAPI.dialog.showError('Error', 'Failed to start playback')
     }
+  }
+
+  const handlePlay = () => {
+    if (!currentStation) return
+    playStation(currentStation)
   }
 
   const handleStop = () => {
@@ -127,34 +145,35 @@ function App() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-900 text-white">
+      <div className="flex items-center justify-center h-screen bg-black text-white">
         <div className="text-xl">Loading...</div>
       </div>
     )
   }
 
   return (
-    <div className="h-screen bg-gray-900 text-white overflow-auto">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <header className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Streamint</h1>
-          <p className="text-gray-400">Web Radio Streaming</p>
-        </header>
+    <div className="h-screen bg-gradient-to-b from-gray-900 to-black text-white overflow-hidden">
+      <div className="container mx-auto px-6 md:px-8 py-4 max-w-7xl h-full flex flex-col">
+        <Header activeTab={activeTab} onTabChange={setActiveTab} />
 
-        <div className="space-y-4">
-          <PlayerControls
-            currentStation={currentStation}
-            isPlaying={isPlaying}
-            onPlay={handlePlay}
-            onStop={handleStop}
-          />
+        <PlayerControls
+          currentStation={currentStation}
+          isPlaying={isPlaying}
+          onPlay={handlePlay}
+          onStop={handleStop}
+          volume={volume}
+          onVolumeChange={handleVolumeChange}
+          stationEmoji={currentStation ? getStationEmoji(currentStation) : '📻'}
+        />
 
-          <VolumeControl volume={volume} onVolumeChange={handleVolumeChange} />
-
+        <div className="flex-1 overflow-y-auto">
           <StationList
             stations={config?.stations || []}
             currentStation={currentStation}
             onStationSelect={handleStationSelect}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            getStationEmoji={getStationEmoji}
           />
         </div>
       </div>

@@ -1,6 +1,10 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-accent-primary: #F59E0B;
+  --color-accent-secondary: #FBBF24;
+  --color-accent-glow: rgba(245, 158, 11, 0.3);
+}
 
 body {
   margin: 0;
@@ -13,13 +17,12 @@ body {
 
 #root {
   width: 100%;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
 }
 
 /* Custom slider styling */
 input[type='range'].slider {
-  accent-color: #2563eb; /* blue-600 */
+  accent-color: #F59E0B; /* orange accent */
 }
 
 input[type='range'].slider::-webkit-slider-thumb {
@@ -28,15 +31,49 @@ input[type='range'].slider::-webkit-slider-thumb {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #2563eb;
+  background: #F59E0B;
   cursor: pointer;
+  transition: background 0.2s;
+}
+
+input[type='range'].slider::-webkit-slider-thumb:hover {
+  background: #FBBF24;
 }
 
 input[type='range'].slider::-moz-range-thumb {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #2563eb;
+  background: #F59E0B;
   cursor: pointer;
   border: none;
+  transition: background 0.2s;
+}
+
+input[type='range'].slider::-moz-range-thumb:hover {
+  background: #FBBF24;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4d4d4d;
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #5d5d5d;
+}
+
+/* Pulsing animation for live indicator */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
