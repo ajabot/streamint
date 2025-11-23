@@ -4,9 +4,34 @@ A modern desktop application for streaming web radio stations, built with Electr
 
 ## Overview
 
-Streamint is a cross-platform desktop application that allows users to listen to internet radio streams. It provides a simple, responsive interface for managing and playing radio stations from a configuration file.
+Streamint is a cross-platform desktop application that allows users to listen to internet radio streams. It features a modern, dark-themed UI with responsive station management and seamless audio playback.
+
+## Features
+
+- **Station Management**: Add, delete, and organize your favorite radio stations
+- **Add Stations from UI**: Click "Add Station" button to add new stations with name and URL validation
+- **Delete Stations**: Remove stations with confirmation modal to prevent accidental deletion
+- **Dual View Modes**: Switch between grid and list views for station browsing
+- **Tab Navigation**: Filter by All Stations, Favorites, or Recently Played
+- **Real-time Playback**: Stream MP3 and AAC audio with live status indicators
+- **Volume Control**: Adjustable volume with persistent settings
+- **Dark Theme**: Modern UI with amber accents optimized for audio applications
+- **Cross-platform**: Works on Windows, macOS, and Linux
+- **Secure Architecture**: Three-process model with context isolation for security
 
 ## Technology Stack & Design Decisions
+
+### Core Technologies
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Electron | 39.0.0 | Cross-platform desktop framework |
+| React | 19.2.0 | UI framework |
+| TypeScript | 5.9.3 | Type-safe JavaScript |
+| Howler.js | 2.2.4 | Audio streaming library |
+| Tailwind CSS | 4.1.x | Utility-first CSS framework |
+| Vite | 7.1.12 | Build tool with HMR |
+| electron-vite | 4.0.1 | Electron-specific build tooling |
 
 ### Why Electron?
 
@@ -115,7 +140,8 @@ streamint/
 │   ├── main/           # Main process (Node.js)
 │   │   └── index.ts    # Application entry, window creation, IPC handlers
 │   ├── preload/        # Preload scripts
-│   │   └── index.ts    # Context bridge, exposes safe APIs
+│   │   ├── index.ts    # Context bridge, exposes safe APIs
+│   │   └── index.d.ts  # TypeScript type definitions for exposed APIs
 │   └── renderer/       # Renderer process (React app)
 │       ├── src/
 │       │   ├── App.tsx              # Main React component with state management
@@ -123,9 +149,13 @@ streamint/
 │       │   ├── types.ts             # TypeScript type definitions
 │       │   ├── index.css            # Global styles and Tailwind directives
 │       │   └── components/          # UI components
-│       │       ├── StationList.tsx      # Radio station selection list
-│       │       ├── PlayerControls.tsx   # Play/Stop controls
-│       │       └── VolumeControl.tsx    # Volume slider
+│       │       ├── Header.tsx           # App header with tab navigation
+│       │       ├── StationList.tsx      # Station display (grid/list views)
+│       │       ├── PlayerControls.tsx   # Playback controls with volume
+│       │       ├── AddStationForm.tsx   # Form to add new stations
+│       │       ├── ConfirmModal.tsx     # Confirmation dialog for deletions
+│       │       ├── Toast.tsx            # Toast notifications
+│       │       └── VolumeControl.tsx    # Standalone volume slider (legacy)
 │       └── index.html  # HTML shell
 ├── electron.vite.config.ts  # Build configuration
 ├── package.json        # Dependencies and scripts
@@ -134,31 +164,90 @@ streamint/
 
 ## UI Components
 
+### Header Component
+Application header with navigation:
+- App branding with logo
+- Tab navigation for filtering stations:
+  - **All Stations**: Shows all configured stations
+  - **Favorites**: Shows only favorite stations
+  - **Recently Played**: Shows recently played stations
+- **Add Station button**: Opens the add station form (+ icon with text)
+- Amber accent color (#F59E0B) for active tabs and add button
+
 ### StationList Component
-Displays all configured radio stations in a scrollable list:
-- Highlights currently selected station in blue
-- Shows favorite stations with a star icon
-- Click to select a station (stops current playback)
-- Shows helpful message when no stations are configured
+Displays radio stations with dual view modes:
+- **Grid View**: Responsive grid (3-6 columns based on screen size)
+  - Emoji-based station icons (deterministically assigned by station name)
+  - Hover effects with amber accent highlights
+  - "LIVE" indicator on currently playing station
+  - Delete button (minus icon) appears on hover in top-right corner
+- **List View**: Full-width list with thumbnails
+  - Station name and metadata display
+  - Compact layout for quick browsing
+  - Delete button appears on hover
+- View toggle buttons (grid/list icons)
+- Click to select and play a station
+- Visual feedback for selected/playing states
 
 ### PlayerControls Component
 Main playback interface:
-- Displays currently selected station name
-- **Play button**: Starts streaming the selected station
-  - Disabled when no station selected or already playing
-  - Uses green color to indicate action
-- **Stop button**: Stops current playback
-  - Disabled when not playing
-  - Uses red color for stop action
-- Button states clearly communicated through color and disabled states
+- Currently playing station display with emoji icon
+- **Play/Pause button**: Toggle playback
+  - Shows play icon when stopped, pause icon when playing
+  - Amber accent color (#F59E0B)
+- **Volume slider**: Real-time volume adjustment (0-100%)
+  - Volume percentage display
+  - Persisted to config file
+- Favorite indicator (heart icon)
 
-### VolumeControl Component
-Adjusts audio output volume:
+### AddStationForm Component
+Form for adding new radio stations:
+- **Name field**: Required text input for station name
+- **URL field**: Required text input with URL validation (http/https)
+- **Save button**: Validates and saves the new station
+- **Cancel button**: Closes the form without saving
+- Auto-generated UUID for new station IDs
+- Success feedback via toast notification
+
+### ConfirmModal Component
+Confirmation dialog for destructive actions:
+- Dark overlay backdrop (closes on click)
+- Station name display in confirmation message
+- **Cancel button**: Closes modal without action
+- **Delete button**: Red accent, confirms deletion
+- Used for station deletion to prevent accidents
+
+### Toast Component
+Temporary notification system:
+- Auto-dismisses after 3 seconds
+- Positioned at bottom-right of the screen
+- Success indicator with checkmark icon
+- Manual close button available
+- Slide-up animation on appearance
+
+### VolumeControl Component (Legacy)
+Standalone volume control:
 - Range slider from 0-100%
 - Real-time volume adjustment using Howler.js
-- Displays current volume percentage
-- Volume setting persisted to config file
-- Custom styled slider with blue accent color
+- Note: Volume control is now integrated into PlayerControls
+
+### Design System
+
+The application uses a dark theme with amber accents:
+
+| Element | Color |
+|---------|-------|
+| Primary Accent | `#F59E0B` (Amber-500) |
+| Secondary Accent | `#FBBF24` (Amber-400) |
+| Glow Effect | `rgba(245, 158, 11, 0.3)` |
+| Background | Gradient from gray-900 to black |
+| Text | White with gray-400 for secondary |
+
+Custom CSS features include:
+- Styled range sliders (WebKit and Mozilla)
+- Custom scrollbars
+- Pulse animation for live indicators
+- Gradient backgrounds and glow effects
 
 ## Audio Streaming with Howler.js
 
@@ -295,7 +384,15 @@ The configuration file is JSON with the following structure:
 
 ### Adding Radio Stations
 
-To add new stations, edit `~/.streamint/config.json`:
+#### Method 1: Using the UI (Recommended)
+
+1. Click the **"+ Add Station"** button in the header
+2. Enter the station name and stream URL
+3. Click **Save Station** - the station is added immediately
+
+#### Method 2: Editing the Config File
+
+To add stations manually, edit `~/.streamint/config.json`:
 
 1. **Find stream URLs**: Many radio stations publish their stream URLs. Look for:
    - `.mp3` or `.aac` direct stream links
@@ -313,6 +410,13 @@ To add new stations, edit `~/.streamint/config.json`:
    ```
 
 3. **Restart the app** or use File > Reload to load new stations
+
+### Deleting Radio Stations
+
+1. Hover over a station in grid or list view
+2. Click the **minus (−)** button that appears
+3. Confirm deletion in the modal dialog
+4. The station is removed immediately (if currently playing, playback stops)
 
 ### Example Configuration
 

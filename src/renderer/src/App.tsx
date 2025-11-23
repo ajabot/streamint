@@ -1,9 +1,12 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Howl } from 'howler'
 import { RadioStation, Config } from './types'
 import StationList from './components/StationList'
 import PlayerControls from './components/PlayerControls'
 import Header from './components/Header'
+import { AddStationForm } from './components/AddStationForm'
+import { Toast } from './components/Toast'
+import { ConfirmModal } from './components/ConfirmModal'
 
 function App() {
   const [config, setConfig] = useState<Config | null>(null)
@@ -13,6 +16,9 @@ function App() {
   const [volume, setVolume] = useState(0.5)
   const [activeTab, setActiveTab] = useState<'all' | 'favorites' | 'recent'>('all')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [toast, setToast] = useState<{ message: string } | null>(null)
+  const [stationToDelete, setStationToDelete] = useState<RadioStation | null>(null)
   const soundRef = useRef<Howl | null>(null)
 
   // Emoji mapping based on station ID hash
@@ -143,6 +149,77 @@ function App() {
     saveConfig({ volume: newVolume })
   }
 
+  const handleAddStation = async (name: string, url: string) => {
+    if (!config) return
+
+    const newStation: RadioStation = {
+      id: crypto.randomUUID(),
+      name,
+      url,
+      favorite: false
+    }
+
+    const updatedConfig = {
+      ...config,
+      stations: [...config.stations, newStation]
+    }
+
+    try {
+      await window.electronAPI.config.write(updatedConfig)
+      setConfig(updatedConfig)
+      setShowAddForm(false)
+      setToast({ message: 'Station added successfully' })
+    } catch (error) {
+      console.error('Failed to add station:', error)
+      await window.electronAPI.dialog.showError('Error', 'Failed to save station')
+    }
+  }
+
+  const handleCloseToast = useCallback(() => {
+    setToast(null)
+  }, [])
+
+  const handleDeleteClick = (station: RadioStation) => {
+    setStationToDelete(station)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!config || !stationToDelete) return
+
+    // Stop playback if deleting the currently playing station
+    if (currentStation?.id === stationToDelete.id) {
+      if (soundRef.current) {
+        soundRef.current.unload()
+        soundRef.current = null
+      }
+      setCurrentStation(null)
+      setIsPlaying(false)
+    }
+
+    const updatedConfig = {
+      ...config,
+      stations: config.stations.filter(s => s.id !== stationToDelete.id),
+      settings: {
+        ...config.settings,
+        lastStation: config.settings.lastStation === stationToDelete.id ? null : config.settings.lastStation
+      }
+    }
+
+    try {
+      await window.electronAPI.config.write(updatedConfig)
+      setConfig(updatedConfig)
+      setStationToDelete(null)
+      setToast({ message: 'Station deleted' })
+    } catch (error) {
+      console.error('Failed to delete station:', error)
+      await window.electronAPI.dialog.showError('Error', 'Failed to delete station')
+    }
+  }
+
+  const handleCancelDelete = () => {
+    setStationToDelete(null)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-black text-white">
@@ -154,7 +231,11 @@ function App() {
   return (
     <div className="h-screen bg-gradient-to-b from-gray-900 to-black text-white overflow-hidden">
       <div className="container mx-auto px-6 md:px-8 py-4 max-w-7xl h-full flex flex-col">
-        <Header activeTab={activeTab} onTabChange={setActiveTab} />
+        <Header
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onAddStationClick={() => setShowAddForm(true)}
+        />
 
         <PlayerControls
           currentStation={currentStation}
@@ -166,16 +247,35 @@ function App() {
           stationEmoji={currentStation ? getStationEmoji(currentStation) : '📻'}
         />
 
-        <div className="flex-1 overflow-y-auto">
-          <StationList
-            stations={config?.stations || []}
-            currentStation={currentStation}
-            onStationSelect={handleStationSelect}
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-            getStationEmoji={getStationEmoji}
+        {showAddForm ? (
+          <AddStationForm
+            onSave={handleAddStation}
+            onCancel={() => setShowAddForm(false)}
           />
-        </div>
+        ) : (
+          <div className="flex-1 overflow-y-auto">
+            <StationList
+              stations={config?.stations || []}
+              currentStation={currentStation}
+              onStationSelect={handleStationSelect}
+              onStationDelete={handleDeleteClick}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              getStationEmoji={getStationEmoji}
+            />
+          </div>
+        )}
+
+        {toast && (
+          <Toast message={toast.message} onClose={handleCloseToast} />
+        )}
+
+        <ConfirmModal
+          isOpen={stationToDelete !== null}
+          stationName={stationToDelete?.name || ''}
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
+        />
       </div>
     </div>
   )

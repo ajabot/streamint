@@ -4,6 +4,7 @@ interface StationListProps {
   stations: RadioStation[]
   currentStation: RadioStation | null
   onStationSelect: (station: RadioStation) => void
+  onStationDelete: (station: RadioStation) => void
   viewMode: 'grid' | 'list'
   onViewModeChange: (mode: 'grid' | 'list') => void
   getStationEmoji: (station: RadioStation) => string
@@ -13,6 +14,7 @@ function StationList({
   stations,
   currentStation,
   onStationSelect,
+  onStationDelete,
   viewMode,
   onViewModeChange,
   getStationEmoji
@@ -64,11 +66,22 @@ function StationList({
                 onClick={() => onStationSelect(station)}
                 className="bg-gray-900 rounded-xl p-3 cursor-pointer transition-all hover:bg-gray-800 group"
               >
-                {/* Card Image with hover play button */}
+                {/* Card Image with hover play and delete buttons */}
                 <div className="relative mb-2">
                   <div className="w-full aspect-square bg-gradient-to-br from-accent-primary to-accent-secondary rounded-lg flex items-center justify-center text-3xl md:text-4xl shadow-lg">
                     {emoji}
                   </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onStationDelete(station)
+                    }}
+                    className="absolute top-1 right-1 w-6 h-6 bg-gray-900/80 hover:bg-red-600 rounded-full flex items-center justify-center text-white text-sm shadow-lg opacity-0 group-hover:opacity-100 transform -translate-y-1 group-hover:translate-y-0 transition-all"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M20 12H4" />
+                    </svg>
+                  </button>
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
@@ -109,10 +122,10 @@ function StationList({
             const emoji = getStationEmoji(station)
             const isActive = currentStation?.id === station.id
             return (
-              <button
+              <div
                 key={station.id}
                 onClick={() => onStationSelect(station)}
-                className={`w-full text-left p-4 rounded-xl transition-all flex items-center gap-4 ${
+                className={`w-full text-left p-4 rounded-xl transition-all flex items-center gap-4 cursor-pointer group ${
                   isActive ? 'bg-gray-800' : 'bg-gray-900 hover:bg-gray-800'
                 }`}
               >
@@ -129,7 +142,7 @@ function StationList({
                   <p className="text-xs md:text-sm text-gray-400">Streaming</p>
                 </div>
 
-                {/* Status and Favorite */}
+                {/* Status, Favorite and Delete */}
                 <div className="flex items-center gap-3 flex-shrink-0">
                   <div className="flex items-center gap-1.5 text-xs text-gray-400">
                     <span
@@ -141,8 +154,19 @@ function StationList({
                   {station.favorite && (
                     <span className="text-accent-primary text-lg">♥</span>
                   )}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onStationDelete(station)
+                    }}
+                    className="w-7 h-7 bg-gray-700 hover:bg-red-600 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M20 12H4" />
+                    </svg>
+                  </button>
                 </div>
-              </button>
+              </div>
             )
           })}
         </div>
