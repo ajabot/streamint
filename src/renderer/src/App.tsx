@@ -6,6 +6,7 @@ import PlayerControls from './components/PlayerControls'
 import Header from './components/Header'
 import { AddStationForm } from './components/AddStationForm'
 import { Toast } from './components/Toast'
+import { ConfirmModal } from './components/ConfirmModal'
 
 function App() {
   const [config, setConfig] = useState<Config | null>(null)
@@ -17,6 +18,7 @@ function App() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [showAddForm, setShowAddForm] = useState(false)
   const [toast, setToast] = useState<{ message: string } | null>(null)
+  const [stationToDelete, setStationToDelete] = useState<RadioStation | null>(null)
   const soundRef = useRef<Howl | null>(null)
 
   // Emoji mapping based on station ID hash
@@ -177,6 +179,47 @@ function App() {
     setToast(null)
   }, [])
 
+  const handleDeleteClick = (station: RadioStation) => {
+    setStationToDelete(station)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!config || !stationToDelete) return
+
+    // Stop playback if deleting the currently playing station
+    if (currentStation?.id === stationToDelete.id) {
+      if (soundRef.current) {
+        soundRef.current.unload()
+        soundRef.current = null
+      }
+      setCurrentStation(null)
+      setIsPlaying(false)
+    }
+
+    const updatedConfig = {
+      ...config,
+      stations: config.stations.filter(s => s.id !== stationToDelete.id),
+      settings: {
+        ...config.settings,
+        lastStation: config.settings.lastStation === stationToDelete.id ? null : config.settings.lastStation
+      }
+    }
+
+    try {
+      await window.electronAPI.config.write(updatedConfig)
+      setConfig(updatedConfig)
+      setStationToDelete(null)
+      setToast({ message: 'Station deleted' })
+    } catch (error) {
+      console.error('Failed to delete station:', error)
+      await window.electronAPI.dialog.showError('Error', 'Failed to delete station')
+    }
+  }
+
+  const handleCancelDelete = () => {
+    setStationToDelete(null)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-black text-white">
@@ -215,6 +258,7 @@ function App() {
               stations={config?.stations || []}
               currentStation={currentStation}
               onStationSelect={handleStationSelect}
+              onStationDelete={handleDeleteClick}
               viewMode={viewMode}
               onViewModeChange={setViewMode}
               getStationEmoji={getStationEmoji}
@@ -225,6 +269,13 @@ function App() {
         {toast && (
           <Toast message={toast.message} onClose={handleCloseToast} />
         )}
+
+        <ConfirmModal
+          isOpen={stationToDelete !== null}
+          stationName={stationToDelete?.name || ''}
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
+        />
       </div>
     </div>
   )
