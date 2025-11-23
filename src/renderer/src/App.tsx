@@ -1,9 +1,11 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Howl } from 'howler'
 import { RadioStation, Config } from './types'
 import StationList from './components/StationList'
 import PlayerControls from './components/PlayerControls'
 import Header from './components/Header'
+import { AddStationForm } from './components/AddStationForm'
+import { Toast } from './components/Toast'
 
 function App() {
   const [config, setConfig] = useState<Config | null>(null)
@@ -13,6 +15,8 @@ function App() {
   const [volume, setVolume] = useState(0.5)
   const [activeTab, setActiveTab] = useState<'all' | 'favorites' | 'recent'>('all')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [toast, setToast] = useState<{ message: string } | null>(null)
   const soundRef = useRef<Howl | null>(null)
 
   // Emoji mapping based on station ID hash
@@ -143,6 +147,36 @@ function App() {
     saveConfig({ volume: newVolume })
   }
 
+  const handleAddStation = async (name: string, url: string) => {
+    if (!config) return
+
+    const newStation: RadioStation = {
+      id: crypto.randomUUID(),
+      name,
+      url,
+      favorite: false
+    }
+
+    const updatedConfig = {
+      ...config,
+      stations: [...config.stations, newStation]
+    }
+
+    try {
+      await window.electronAPI.config.write(updatedConfig)
+      setConfig(updatedConfig)
+      setShowAddForm(false)
+      setToast({ message: 'Station added successfully' })
+    } catch (error) {
+      console.error('Failed to add station:', error)
+      await window.electronAPI.dialog.showError('Error', 'Failed to save station')
+    }
+  }
+
+  const handleCloseToast = useCallback(() => {
+    setToast(null)
+  }, [])
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-black text-white">
@@ -154,7 +188,11 @@ function App() {
   return (
     <div className="h-screen bg-gradient-to-b from-gray-900 to-black text-white overflow-hidden">
       <div className="container mx-auto px-6 md:px-8 py-4 max-w-7xl h-full flex flex-col">
-        <Header activeTab={activeTab} onTabChange={setActiveTab} />
+        <Header
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onAddStationClick={() => setShowAddForm(true)}
+        />
 
         <PlayerControls
           currentStation={currentStation}
@@ -166,16 +204,27 @@ function App() {
           stationEmoji={currentStation ? getStationEmoji(currentStation) : '📻'}
         />
 
-        <div className="flex-1 overflow-y-auto">
-          <StationList
-            stations={config?.stations || []}
-            currentStation={currentStation}
-            onStationSelect={handleStationSelect}
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-            getStationEmoji={getStationEmoji}
+        {showAddForm ? (
+          <AddStationForm
+            onSave={handleAddStation}
+            onCancel={() => setShowAddForm(false)}
           />
-        </div>
+        ) : (
+          <div className="flex-1 overflow-y-auto">
+            <StationList
+              stations={config?.stations || []}
+              currentStation={currentStation}
+              onStationSelect={handleStationSelect}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              getStationEmoji={getStationEmoji}
+            />
+          </div>
+        )}
+
+        {toast && (
+          <Toast message={toast.message} onClose={handleCloseToast} />
+        )}
       </div>
     </div>
   )
